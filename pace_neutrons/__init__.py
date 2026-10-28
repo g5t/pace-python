@@ -102,8 +102,10 @@ class Matlab(libpymcr.Matlab):
                 ctffile = _VERSION_DIR / f'pace_{avail_ML[0]["version"]}.ctf'
                 super().__init__(ctffile.resolve(), mlPath=matlab_path)
         else:
-            ctf = [v['file'] for v in _VERSIONS if v['version'].lower() == matlab_version.lower()]
-            nmx = [v for v in _NOMEXS if v['version'].lower() == matlab_version.lower()]
+            # Accept both 'R2024a' (as set in PACE_MCR_VERSION by the CLI) and '2024a'
+            matlab_version = matlab_version.lower().lstrip('r')
+            ctf = [v['file'] for v in _VERSIONS if v['version'].lower() == matlab_version]
+            nmx = [v for v in _NOMEXS if v['version'].lower() == matlab_version]
             if not ctf and nmx:
                 recombinemex(f'R{nmx[0]["version"]}', _VERSION_DIR)
                 ctf = [(_VERSION_DIR / f'pace_{nmx[0]["version"]}.ctf').resolve()]
