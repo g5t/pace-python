@@ -15,11 +15,13 @@ RVERS.update({'9.14':'R2023a', '23.2':'R2023b', '24.1':'R2024a', '24.2':'R2024b'
 def get_mlpath():
     if 'PACE_MCR_DIR' in os.environ:
         libpath = os.path.join(os.environ['PACE_MCR_DIR'], 'runtime', OSTYPE[OS])
-        mcllib = glob.glob(os.path.join(libpath, '*mclmcrrt*'))
-        if not mcllib:
+        # mclmcrrt24_1.dll (Windows), libmwmclmcrrt.so.24.1 (Linux), libmwmclmcrrt.24.1.dylib (macOS);
+        # skip unversioned names such as the libmwmclmcrrt.so symlink
+        versions = [m.groups() for f in glob.glob(os.path.join(libpath, '*mclmcrrt*'))
+                    for m in [re.search(r'mclmcrrt\D*(\d+)[._](\d+)', os.path.basename(f))] if m]
+        if not versions:
             raise RuntimeError(f'Matlab MCR library not found in installation at {os.environ["PACE_MCR_DIR"]}')
-        # mclmcrrt24_1.dll (Windows), libmwmclmcrrt.so.24.1 (Linux), libmwmclmcrrt.24.1.dylib (macOS)
-        ver = '.'.join(re.search(r'mclmcrrt\D*(\d+)[._](\d+)', os.path.basename(mcllib[0])).groups())
+        ver = '.'.join(versions[0])
         return os.environ['PACE_MCR_DIR'], RVERS[ver]
     import pace_neutrons, libpymcr
     if pace_neutrons.INITIALIZED:
