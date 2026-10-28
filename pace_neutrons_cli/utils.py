@@ -1,6 +1,7 @@
 import os
 import sys
 import glob
+import re
 import platform
 from http import HTTPStatus
 
@@ -17,7 +18,8 @@ def get_mlpath():
         mcllib = glob.glob(os.path.join(libpath, '*mclmcrrt*'))
         if not mcllib:
             raise RuntimeError(f'Matlab MCR library not found in installation at {os.environ["PACE_MCR_DIR"]}')
-        ver = mcllib[0].split('mclmcrrt')[1].split('.')[0].replace('_','.')
+        # mclmcrrt24_1.dll (Windows), libmwmclmcrrt.so.24.1 (Linux), libmwmclmcrrt.24.1.dylib (macOS)
+        ver = '.'.join(re.search(r'mclmcrrt\D*(\d+)[._](\d+)', os.path.basename(mcllib[0])).groups())
         return os.environ['PACE_MCR_DIR'], RVERS[ver]
     import pace_neutrons, libpymcr
     if pace_neutrons.INITIALIZED:
